@@ -5,7 +5,7 @@ A self-contained Lovelace card for the
 Assistant integration. No build step, no dependencies — a single plain custom
 element, with a graphical editor and live preview in the card picker.
 
-![DWD Pollenflug Card preview](preview.svg)
+![DWD Pollenflug Card preview](preview.png)
 
 ## Install
 
