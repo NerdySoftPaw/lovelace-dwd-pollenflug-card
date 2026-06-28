@@ -11,6 +11,18 @@
 
 const DAY_LABELS = ["Heute", "Morgen", "Übermorgen"];
 
+// Fallback labels, keyed by the English pollen slug at the end of the entity_id.
+const POLLEN_LABELS = {
+  hazel: "Hasel",
+  alder: "Erle",
+  ash: "Esche",
+  birch: "Birke",
+  grasses: "Gräser",
+  rye: "Roggen",
+  mugwort: "Beifuß",
+  ragweed: "Ambrosia",
+};
+
 // Index -> RGB stops, interpolated for half-steps.
 const COLOR_STOPS = [
   [0.0, [76, 175, 80]],   // keine        – green
@@ -104,18 +116,33 @@ class DwdPollenflugCard extends HTMLElement {
     return { entities: [], forecast: true };
   }
 
+  _deviceName(entityId) {
+    try {
+      const reg = this._hass.entities?.[entityId];
+      const dev = reg?.device_id ? this._hass.devices?.[reg.device_id] : null;
+      return dev?.name_by_user || dev?.name || null;
+    } catch (_e) {
+      return null;
+    }
+  }
+
   _title() {
     if (this._config.title) return this._config.title;
-    try {
-      const first = this._entities[0].entity;
-      const reg = this._hass.entities?.[first];
-      const dev = reg?.device_id ? this._hass.devices?.[reg.device_id] : null;
-      const name = dev?.name_by_user || dev?.name;
-      if (name) return name;
-    } catch (_e) {
-      /* ignore */
+    const name = this._deviceName(this._entities[0]?.entity);
+    return name || "Pollenflug";
+  }
+
+  // Short per-row label: strip the region/device prefix from the friendly name
+  // (auto-localises to "Gräser", "Birke", …); fall back to the entity_id slug.
+  _shortName(entityId, attrs) {
+    const full = attrs.friendly_name || entityId;
+    const device = this._deviceName(entityId);
+    if (device && full.startsWith(device)) {
+      const rest = full.slice(device.length).replace(/^[\s–-]+/, "").trim();
+      if (rest) return rest;
     }
-    return "Pollenflug";
+    const token = entityId.split(".").pop().split("_").pop();
+    return POLLEN_LABELS[token] || full;
   }
 
   _build() {
@@ -235,7 +262,7 @@ class DwdPollenflugCard extends HTMLElement {
 
       const today = parseNumber(st.state);
       refs.icon.setAttribute("icon", attrs.icon || "mdi:flower-pollen");
-      refs.name.textContent = refs.item.name || attrs.friendly_name || entityId;
+      refs.name.textContent = refs.item.name || this._shortName(entityId, attrs);
 
       refs.fill.style.width = `${((today ?? 0) / 3) * 100}%`;
       refs.fill.style.backgroundColor = levelColor(today);
