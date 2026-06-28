@@ -5,14 +5,7 @@ A self-contained Lovelace card for the
 Assistant integration. No build step, no dependencies — a single plain custom
 element, with a graphical editor and live preview in the card picker.
 
-```
-┌─ Pollenflug · Inseln und Marschen ─┐
-│ 🌿 Gräser      ███░  mittel-hoch   │
-│ 🌳 Birke       ░░░░  keine         │
-│ 🌾 Roggen      █░░░  gering        │
-│ ...  (Heute │ Morgen │ Übermorgen) │
-└────────────────────────────────────┘
-```
+![DWD Pollenflug Card preview](preview.svg)
 
 ## Install
 
