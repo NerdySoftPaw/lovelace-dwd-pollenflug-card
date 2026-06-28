@@ -79,14 +79,13 @@ function pollenEntities(hass) {
 
 class DwdPollenflugCard extends HTMLElement {
   setConfig(config) {
-    if (!config || !Array.isArray(config.entities) || config.entities.length === 0) {
-      throw new Error('dwd-pollenflug-card: "entities" mit mindestens einem Sensor angeben.');
-    }
-    this._config = config;
-    this._entities = config.entities.map((e) =>
-      typeof e === "string" ? { entity: e } : e
-    );
-    this._showForecast = config.forecast !== false;
+    // Never throw here: the card picker renders a preview from getStubConfig(),
+    // which may yield an empty entity list — a throw would drop the card from
+    // the picker entirely. Render a placeholder instead.
+    this._config = config || {};
+    const list = Array.isArray(this._config.entities) ? this._config.entities : [];
+    this._entities = list.map((e) => (typeof e === "string" ? { entity: e } : e));
+    this._showForecast = this._config.forecast !== false;
     this._built = false;
     this.innerHTML = "";
   }
@@ -229,6 +228,14 @@ class DwdPollenflugCard extends HTMLElement {
       row.append(icon, main, chips);
       body.appendChild(row);
       this._rows[item.entity] = { row, icon, name, fill, desc, chipEls, item };
+    }
+
+    if (!this._entities.length) {
+      const empty = document.createElement("div");
+      empty.className = "pf-desc";
+      empty.textContent =
+        "Keine Pollen-Sensoren ausgewählt – im Karten-Editor Sensoren der DWD-Pollenflug-Integration hinzufügen.";
+      body.appendChild(empty);
     }
 
     const footer = document.createElement("div");
